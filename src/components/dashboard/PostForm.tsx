@@ -6,19 +6,30 @@ import { useToast } from '@/components/ui/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Image, Film, X, Camera, Smile } from 'lucide-react';
 
-const PostForm = ({ onPostSubmit }) => {
+interface PostFormProps {
+  onPostSubmit: (post: any) => void;
+}
+
+interface MediaFile {
+  id: string;
+  file: File;
+  type: 'image' | 'video';
+  preview: string;
+}
+
+const PostForm = ({ onPostSubmit }: PostFormProps) => {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [mediaFiles, setMediaFiles] = useState([]);
-  const fileInputRef = useRef(null);
+  const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const handleTextChange = (e) => {
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
   };
 
-  const handleFileChange = (e) => {
-    const files = Array.from(e.target.files);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
     
     // Limit number of files
     if (mediaFiles.length + files.length > 5) {
@@ -33,18 +44,18 @@ const PostForm = ({ onPostSubmit }) => {
     const newFiles = files.map(file => ({
       id: Date.now() + Math.random().toString(36).substring(2, 9),
       file,
-      type: file.type.startsWith('image/') ? 'image' : 'video',
+      type: file.type.startsWith('image/') ? 'image' : 'video' as const,
       preview: URL.createObjectURL(file)
     }));
     
     setMediaFiles([...mediaFiles, ...newFiles]);
   };
 
-  const removeFile = (id) => {
+  const removeFile = (id: string) => {
     setMediaFiles(mediaFiles.filter(file => file.id !== id));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!content.trim() && mediaFiles.length === 0) {

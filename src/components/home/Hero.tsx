@@ -2,7 +2,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -31,15 +30,6 @@ const Hero = () => {
               >
                 Explore Courses
               </Button>
-              <Button 
-                variant="outline" 
-                size="lg"
-                onClick={() => navigate('/register')}
-                className="group"
-              >
-                Apply Now 
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Button>
             </div>
           </div>
           
@@ -53,11 +43,6 @@ const Hero = () => {
                   e.currentTarget.src = "https://via.placeholder.com/800x600?text=GFGC+Chikkaballpur";
                 }}
               />
-              <div className="absolute -bottom-6 -right-6 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg">
-                <p className="text-lg font-semibold text-college-600 dark:text-college-400">
-                  Admission Open 2023-24
-                </p>
-              </div>
             </div>
           </div>
         </div>

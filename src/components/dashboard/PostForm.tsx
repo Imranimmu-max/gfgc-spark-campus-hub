@@ -41,12 +41,17 @@ const PostForm = ({ onPostSubmit }: PostFormProps) => {
       return;
     }
     
-    const newFiles = files.map(file => ({
-      id: Date.now() + Math.random().toString(36).substring(2, 9),
-      file,
-      type: file.type.startsWith('image/') ? 'image' : 'video' as const,
-      preview: URL.createObjectURL(file)
-    }));
+    const newFiles: MediaFile[] = files.map(file => {
+      // Explicitly determine the type as 'image' or 'video'
+      const fileType: 'image' | 'video' = file.type.startsWith('image/') ? 'image' : 'video';
+      
+      return {
+        id: Date.now() + Math.random().toString(36).substring(2, 9),
+        file,
+        type: fileType,
+        preview: URL.createObjectURL(file)
+      };
+    });
     
     setMediaFiles([...mediaFiles, ...newFiles]);
   };

@@ -51,13 +51,6 @@ const Navbar = () => {
               </Link>
             ))}
             <Button 
-              variant="secondary" 
-              className="ml-2" 
-              onClick={() => navigate('/login')}
-            >
-              Login
-            </Button>
-            <Button 
               variant="ghost" 
               size="icon" 
               onClick={toggleTheme} 
@@ -105,16 +98,6 @@ const Navbar = () => {
               {link.name}
             </Link>
           ))}
-          <Button
-            variant="secondary"
-            className="w-full justify-start mt-2"
-            onClick={() => {
-              navigate('/login');
-              setMobileMenuOpen(false);
-            }}
-          >
-            Login
-          </Button>
         </div>
       </div>
     </nav>

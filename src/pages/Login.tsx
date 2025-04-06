@@ -7,6 +7,23 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/components/ui/use-toast';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -14,6 +31,9 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [verificationOpen, setVerificationOpen] = useState(false);
+  const [otpValue, setOtpValue] = useState('');
+  const [verifyLoading, setVerifyLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -21,23 +41,64 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate login process
-    setTimeout(() => {
-      // For demo, we'll use a simple check
-      if (email === 'student@example.com' && password === 'password') {
-        toast({
-          title: "Login successful!",
-          description: "Welcome back to GFGC Chikkaballpur.",
-        });
-        navigate('/dashboard');
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Login failed",
-          description: "Invalid email or password. Please try again.",
-        });
-      }
+    // Basic validation
+    if (!email || !password) {
+      toast({
+        variant: "destructive",
+        title: "Please fill in all fields",
+        description: "Email and password are required.",
+      });
       setIsLoading(false);
+      return;
+    }
+    
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast({
+        variant: "destructive",
+        title: "Invalid email format",
+        description: "Please enter a valid email address.",
+      });
+      setIsLoading(false);
+      return;
+    }
+    
+    // Simulate server login verification
+    setTimeout(() => {
+      // For this example, we'll simulate a successful login attempt that requires verification
+      toast({
+        title: "Verification required",
+        description: "We've sent a verification code to your email.",
+      });
+      setIsLoading(false);
+      setVerificationOpen(true);
+    }, 1000);
+  };
+  
+  const handleVerification = () => {
+    // Validate OTP
+    if (otpValue.length !== 6) {
+      toast({
+        variant: "destructive",
+        title: "Invalid verification code",
+        description: "Please enter the 6-digit code sent to your email.",
+      });
+      return;
+    }
+    
+    setVerifyLoading(true);
+    
+    // Simulate verification process
+    setTimeout(() => {
+      setVerifyLoading(false);
+      setVerificationOpen(false);
+      
+      toast({
+        title: "Login successful!",
+        description: "Welcome back to GFGC Chikkaballpur.",
+      });
+      navigate('/dashboard');
     }, 1500);
   };
 
@@ -147,12 +208,6 @@ const Login = () => {
               </p>
             </div>
           </form>
-          
-          <div className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
-            <p>Demo credentials:</p>
-            <p>Email: student@example.com</p>
-            <p>Password: password</p>
-          </div>
         </div>
       </div>
       
@@ -174,6 +229,50 @@ const Login = () => {
           </p>
         </div>
       </div>
+      
+      {/* Verification Dialog */}
+      <Dialog open={verificationOpen} onOpenChange={setVerificationOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Email Verification</DialogTitle>
+            <DialogDescription>
+              Enter the 6-digit code sent to your email address.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center p-4">
+            <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
+              <InputOTPGroup>
+                <InputOTPSlot index={0} />
+                <InputOTPSlot index={1} />
+                <InputOTPSlot index={2} />
+                <InputOTPSlot index={3} />
+                <InputOTPSlot index={4} />
+                <InputOTPSlot index={5} />
+              </InputOTPGroup>
+            </InputOTP>
+            <p className="text-sm text-gray-500 mt-2">
+              Didn't receive a code? <a href="#" className="text-college-600 hover:text-college-500">Resend code</a>
+            </p>
+            <Button 
+              className="mt-4 w-full bg-college-600 hover:bg-college-700" 
+              onClick={handleVerification}
+              disabled={verifyLoading}
+            >
+              {verifyLoading ? (
+                <span className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Verifying...
+                </span>
+              ) : (
+                "Verify and Login"
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

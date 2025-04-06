@@ -7,6 +7,7 @@ import { useTheme } from '@/hooks/useTheme';
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [logoError, setLogoError] = useState(false);
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
 
@@ -24,15 +25,19 @@ const Navbar = () => {
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
               <Link to="/" className="flex items-center">
-                <div className="h-10 w-10 relative overflow-hidden">
-                  <img
-                    className="h-full w-full object-contain"
-                    src="/college-logo.png"
-                    alt="GFGC Logo"
-                    onError={(e) => {
-                      e.currentTarget.src = "https://via.placeholder.com/40x40?text=GFGC";
-                    }}
-                  />
+                <div className="h-10 w-10 flex items-center justify-center bg-white rounded overflow-hidden">
+                  {!logoError ? (
+                    <img
+                      className="h-full w-full object-contain"
+                      src="/college-logo.png"
+                      alt="GFGC Logo"
+                      onError={() => setLogoError(true)}
+                    />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center bg-college-100 text-college-800 font-bold text-xs">
+                      GFGC
+                    </div>
+                  )}
                 </div>
                 <span className="ml-2 text-xl font-heading font-bold text-college-800 dark:text-white">
                   GFGC <span className="text-college-600">Chikkaballpur</span>

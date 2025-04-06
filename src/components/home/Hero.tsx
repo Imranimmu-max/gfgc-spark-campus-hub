@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
 const Hero = () => {
   const navigate = useNavigate();
+  const [imageError, setImageError] = useState(false);
 
   return (
     <div className="relative overflow-hidden bg-white dark:bg-gray-900">
@@ -27,14 +28,18 @@ const Hero = () => {
           <div className="hidden lg:block">
             <div className="relative w-full h-[450px] animate-float">
               <div className="w-full h-full overflow-hidden rounded-lg shadow-xl">
-                <img 
-                  src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                  alt="College students"
-                  className="object-cover w-full h-full"
-                  onError={(e) => {
-                    e.currentTarget.src = "https://via.placeholder.com/800x600?text=GFGC+Chikkaballpur";
-                  }}
-                />
+                {!imageError ? (
+                  <img 
+                    src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                    alt="College students"
+                    className="object-cover w-full h-full"
+                    onError={() => setImageError(true)}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-college-100 text-college-800">
+                    <span className="text-xl font-bold">GFGC Chikkaballpur</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

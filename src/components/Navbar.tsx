@@ -24,14 +24,16 @@ const Navbar = () => {
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
               <Link to="/" className="flex items-center">
-                <img
-                  className="h-10 w-auto"
-                  src="/college-logo.png"
-                  alt="GFGC Logo"
-                  onError={(e) => {
-                    e.currentTarget.src = "https://via.placeholder.com/40x40?text=GFGC";
-                  }}
-                />
+                <div className="h-10 w-10 relative overflow-hidden">
+                  <img
+                    className="h-full w-full object-contain"
+                    src="/college-logo.png"
+                    alt="GFGC Logo"
+                    onError={(e) => {
+                      e.currentTarget.src = "https://via.placeholder.com/40x40?text=GFGC";
+                    }}
+                  />
+                </div>
                 <span className="ml-2 text-xl font-heading font-bold text-college-800 dark:text-white">
                   GFGC <span className="text-college-600">Chikkaballpur</span>
                 </span>

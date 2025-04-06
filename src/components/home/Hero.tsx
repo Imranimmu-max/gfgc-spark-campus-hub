@@ -22,27 +22,20 @@ const Hero = () => {
             <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto lg:mx-0">
               Empowering minds, shaping futures. Join us on a journey of academic excellence, innovation, and holistic development.
             </p>
-            <div className="flex flex-col sm:flex-row justify-center lg:justify-start space-y-4 sm:space-y-0 sm:space-x-4">
-              <Button 
-                size="lg" 
-                className="bg-college-600 hover:bg-college-700 text-white"
-                onClick={() => navigate('/courses')}
-              >
-                Explore Courses
-              </Button>
-            </div>
           </div>
           
           <div className="hidden lg:block">
             <div className="relative w-full h-[450px] animate-float">
-              <img 
-                src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                alt="College students"
-                className="rounded-lg shadow-xl object-cover w-full h-full"
-                onError={(e) => {
-                  e.currentTarget.src = "https://via.placeholder.com/800x600?text=GFGC+Chikkaballpur";
-                }}
-              />
+              <div className="w-full h-full overflow-hidden rounded-lg shadow-xl">
+                <img 
+                  src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                  alt="College students"
+                  className="object-cover w-full h-full"
+                  onError={(e) => {
+                    e.currentTarget.src = "https://via.placeholder.com/800x600?text=GFGC+Chikkaballpur";
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>

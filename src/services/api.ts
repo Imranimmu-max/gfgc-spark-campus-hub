@@ -5,6 +5,10 @@ const API_URL = import.meta.env.PROD
   ? 'https://gfgc-spark-campus-hub-server.vercel.app/api'  // Production API URL (updated)
   : 'http://localhost:5000/api';  // Development API URL
 
+// For debugging
+console.log('Current environment:', import.meta.env.MODE);
+console.log('Using API URL:', API_URL);
+
 // Types
 export interface GalleryItem {
   id: number;

@@ -18,7 +18,7 @@ const defaultGalleryItems = [
     type: 'image',
     title: 'GFGC Main Building',
     date: 'March 15, 2023',
-    src: 'https://lh3.googleusercontent.com/gps-cs-s/AC9h4nonmoa93PuaT9Wv_g5AjBIpBt-YHY3vCBuUqKPO-5gRVzOLYDXmqRejN83nv4_664h5CvtwLeXNZV8EI2dFMnrzoPLVA9VlPszVY-hLNXoB-Lc7UHAo-arpubuUUW5_2VF_7-Y=s680-w680-h510-rw',
+    src: 'https://media.getmyuni.com/azure/college-images-test/government-first-grade-college-chikkaballapur/f30ad73d38de4ec08b9ef72a1ee14d35.jpeg',
     category: 'campus',
   },
   {
@@ -26,7 +26,7 @@ const defaultGalleryItems = [
     type: 'image',
     title: 'College Campus View',
     date: 'February 20, 2023',
-    src: 'https://lh3.googleusercontent.com/p/AF1QipNVu9Kj2Z_lJWd0-BNwj-XzZfcxTLw-kIKZ-Kk=s1360-w1360-h1020',
+    src: 'https://media.getmyuni.com/azure/college-images-test/government-first-grade-college-chikkaballapur/a9967d73a4d4465099ea82926279129d.jpeg',
     category: 'campus',
   },
   {
@@ -34,7 +34,7 @@ const defaultGalleryItems = [
     type: 'image',
     title: 'College Building',
     date: 'January 5, 2023',
-    src: 'https://lh3.googleusercontent.com/p/AF1QipPCcZXE3WXhePmEj3-PvKrB9j3dLZnOYm9Yiw4=s1360-w1360-h1020',
+    src: 'https://media.getmyuni.com/azure/college-images-test/government-first-grade-college-chikkaballapur/3bd1e4699e604ae684307884524dc6e7.jpeg',
     category: 'campus',
   },
   {
@@ -42,7 +42,7 @@ const defaultGalleryItems = [
     type: 'image',
     title: 'College Entrance',
     date: 'December 12, 2022',
-    src: 'https://lh3.googleusercontent.com/p/AF1QipMQyRGDmB9KdRvCGgQSBA9y5-GYYpSZxC_-Yw8=s1360-w1360-h1020',
+    src: 'https://media.getmyuni.com/azure/college-images-test/government-first-grade-college-chikkaballapur/4fca197eee2b481b8fe6a92ebd50dc3c.jpeg',
     category: 'campus',
   },
   {
@@ -50,7 +50,7 @@ const defaultGalleryItems = [
     type: 'image',
     title: 'College Facilities',
     date: 'November 10, 2022',
-    src: 'https://lh3.googleusercontent.com/p/AF1QipOLxUAe5iLhEacv7c9BHZpBVxF6pQHHJJxQ5Ks=s1360-w1360-h1020',
+    src: 'https://media.getmyuni.com/azure/college-images-test/government-first-grade-college-chikkaballapur/75db23ce756d4b25a0834adf1b4a757c.jpeg',
     category: 'academic',
   },
   {
@@ -58,7 +58,7 @@ const defaultGalleryItems = [
     type: 'image',
     title: 'College Infrastructure',
     date: 'October 5, 2022',
-    src: 'https://lh3.googleusercontent.com/p/AF1QipMQyRGDmB9KdRvCGgQSBA9y5-GYYpSZxC_-Yw8=s1360-w1360-h1020',
+    src: 'https://media.getmyuni.com/azure/college-images-test/government-first-grade-college-chikkaballapur/4586a165288144cab070a9acd2d38e50.jpeg',
     category: 'academic',
   },
   {
@@ -66,7 +66,7 @@ const defaultGalleryItems = [
     type: 'image',
     title: 'Sports Ground',
     date: 'September 15, 2022',
-    src: 'https://lh3.googleusercontent.com/p/AF1QipNVu9Kj2Z_lJWd0-BNwj-XzZfcxTLw-kIKZ-Kk=s1360-w1360-h1020',
+    src: 'https://images.shiksha.com/mediadata/images/1588073398phpnXJcHH.jpeg',
     category: 'sports',
   },
   {
@@ -74,7 +74,7 @@ const defaultGalleryItems = [
     type: 'image',
     title: 'Cultural Activities',
     date: 'August 20, 2022',
-    src: 'https://lh3.googleusercontent.com/p/AF1QipOLxUAe5iLhEacv7c9BHZpBVxF6pQHHJJxQ5Ks=s1360-w1360-h1020',
+    src: 'https://images.shiksha.com/mediadata/images/1588073398phpnXJcHH.jpeg',
     category: 'cultural',
   },
 ];
@@ -437,7 +437,8 @@ const Gallery = () => {
                       onError={(e) => {
                         console.error('Image load error for:', item.title, item.src);
                         console.error('Full URL attempted:', item.src.startsWith('http') ? item.src : getFullImageUrl(item.src));
-                        e.currentTarget.src = "https://via.placeholder.com/400x400?text=Gallery+Image";
+                        // Use a more reliable fallback image
+                        e.currentTarget.src = "https://media.getmyuni.com/azure/college-images-test/government-first-grade-college-chikkaballapur/f30ad73d38de4ec08b9ef72a1ee14d35.jpeg";
                       }}
                     />
                     {item.type === 'video' && (
@@ -527,7 +528,7 @@ const Gallery = () => {
                     alt={selectedItem.title}
                     className="max-h-[80vh] w-auto"
                     onError={(e) => {
-                      e.currentTarget.src = "https://via.placeholder.com/800x600?text=Gallery+Image";
+                      e.currentTarget.src = "https://media.getmyuni.com/azure/college-images-test/government-first-grade-college-chikkaballapur/f30ad73d38de4ec08b9ef72a1ee14d35.jpeg";
                     }}
                   />
                 ) : (

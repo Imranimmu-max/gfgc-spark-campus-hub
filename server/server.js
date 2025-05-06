@@ -73,9 +73,13 @@ let galleryData = [];
 // Load existing gallery data if available
 const dataFilePath = path.join(__dirname, 'gallery-data.json');
 try {
-  if (fs.existsSync(dataFilePath)) {
+  // Only try to load from file if not on Vercel
+  if (!isVercel && fs.existsSync(dataFilePath)) {
     galleryData = JSON.parse(fs.readFileSync(dataFilePath, 'utf8'));
-    console.log('Loaded existing gallery data');
+    console.log('Loaded existing gallery data from file');
+  } else if (isVercel) {
+    console.log('Running on Vercel, using in-memory storage only');
+    // In a real production app, you would load data from a database here
   }
 } catch (error) {
   console.error('Error loading gallery data:', error);
@@ -83,11 +87,16 @@ try {
 
 // Save gallery data to file
 const saveGalleryData = () => {
-  try {
-    fs.writeFileSync(dataFilePath, JSON.stringify(galleryData, null, 2));
-    console.log('Gallery data saved');
-  } catch (error) {
-    console.error('Error saving gallery data:', error);
+  // Only save to file if not on Vercel (since Vercel has a read-only filesystem)
+  if (!isVercel) {
+    try {
+      fs.writeFileSync(dataFilePath, JSON.stringify(galleryData, null, 2));
+      console.log('Gallery data saved to file');
+    } catch (error) {
+      console.error('Error saving gallery data to file:', error);
+    }
+  } else {
+    console.log('Running on Vercel, skipping file save (using in-memory storage only)');
   }
 };
 
@@ -185,7 +194,14 @@ app.delete('/api/gallery/:id', (req, res) => {
   res.json({ message: 'Image deleted successfully' });
 });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// For Vercel serverless functions, we need to export the app
+// For local development, we'll start the server
+if (isVercel) {
+  console.log('Exporting app for Vercel serverless function');
+  module.exports = app;
+} else {
+  // Start the server for local development
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}

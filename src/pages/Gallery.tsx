@@ -103,25 +103,12 @@ const Gallery = () => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<GalleryItem | null>(null);
 
-  // Load gallery items from local storage and server
+  // Load gallery items from server and local storage
   useEffect(() => {
     const loadGalleryItems = async () => {
       setIsLoading(true);
       try {
-        // Try to load user uploads from local storage first
-        const savedUploads = localStorage.getItem('userUploads');
-        let userUploads = [];
-
-        if (savedUploads) {
-          try {
-            userUploads = JSON.parse(savedUploads);
-            console.log('User uploads from local storage:', userUploads);
-          } catch (e) {
-            console.error('Error parsing saved uploads:', e);
-          }
-        }
-
-        // Also try to get uploads from server as a fallback
+        // First try to get uploads from server (primary source)
         let serverUploads = [];
         try {
           serverUploads = await fetchGalleryItems();
@@ -130,7 +117,28 @@ const Gallery = () => {
           console.error('Error fetching from server:', e);
         }
 
-        // Combine all sources, with local storage taking precedence
+        // Then try to load user uploads from local storage (for offline support)
+        const savedUploads = localStorage.getItem('userUploads');
+        let userUploads = [];
+
+        if (savedUploads) {
+          try {
+            userUploads = JSON.parse(savedUploads);
+            console.log('User uploads from local storage:', userUploads);
+
+            // Filter out any local uploads that already exist on the server
+            // This prevents duplicates and ensures server data takes precedence
+            if (serverUploads.length > 0) {
+              const serverIds = serverUploads.map(item => item.id);
+              userUploads = userUploads.filter(item => !serverIds.includes(item.id));
+              console.log('Filtered local uploads (removing server duplicates):', userUploads);
+            }
+          } catch (e) {
+            console.error('Error parsing saved uploads:', e);
+          }
+        }
+
+        // Combine all sources, with server taking precedence
         const allUploads = [...serverUploads, ...userUploads];
 
         // Combine default items with user uploads
@@ -196,34 +204,16 @@ const Gallery = () => {
     console.log('Title:', uploadTitle);
 
     try {
-      // Create a client-side only version of the upload
-      // This will work even if the server is not available
-      const reader = new FileReader();
+      // First, upload to the server
+      const uploadedItem = await uploadImage(selectedFile, uploadTitle);
 
-      reader.onload = (event) => {
-        const imageUrl = event.target?.result as string;
-
-        // Create a new gallery item
-        const newItem: GalleryItem = {
-          id: Date.now(), // Use timestamp as ID
-          type: 'image',
-          title: uploadTitle,
-          date: new Date().toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          }),
-          src: imageUrl,
-          category: 'user-uploads',
-          filename: selectedFile.name
-        };
-
-        console.log('Created local item:', newItem);
+      if (uploadedItem) {
+        console.log('Successfully uploaded to server:', uploadedItem);
 
         // Add the new item to the gallery items
-        setGalleryItems(prev => [...prev, newItem]);
+        setGalleryItems(prev => [...prev, uploadedItem]);
 
-        // Save to local storage
+        // Also save a reference in local storage for faster loading
         try {
           // Get existing uploads from local storage
           const savedUploads = localStorage.getItem('userUploads');
@@ -233,10 +223,21 @@ const Gallery = () => {
             userUploads = JSON.parse(savedUploads);
           }
 
-          // Add new upload and save back to local storage
-          userUploads.push(newItem);
+          // Add new upload reference and save back to local storage
+          // Note: We're only storing the ID and basic info, not the full image data
+          const uploadReference = {
+            id: uploadedItem.id,
+            type: uploadedItem.type,
+            title: uploadedItem.title,
+            date: uploadedItem.date,
+            src: uploadedItem.src,
+            category: uploadedItem.category,
+            filename: uploadedItem.filename
+          };
+
+          userUploads.push(uploadReference);
           localStorage.setItem('userUploads', JSON.stringify(userUploads));
-          console.log('Saved to local storage:', userUploads);
+          console.log('Saved reference to local storage:', userUploads);
         } catch (e) {
           console.error('Error saving to local storage:', e);
         }
@@ -256,23 +257,85 @@ const Gallery = () => {
         setActiveCategory('user-uploads');
 
         // Show success message
-        alert('Image uploaded successfully! Your image will now be saved across sessions and devices.');
+        alert('Image uploaded successfully! Your image will now be available across all devices.');
+      } else {
+        // Fallback to local storage only if server upload fails
+        console.log('Server upload failed, falling back to local storage only');
 
-        setIsUploading(false);
-      };
+        // Create a client-side only version of the upload
+        const reader = new FileReader();
 
-      reader.onerror = () => {
-        console.error('Error reading file');
-        alert('Failed to process image. Please try again.');
-        setIsUploading(false);
-      };
+        reader.onload = (event) => {
+          const imageUrl = event.target?.result as string;
 
-      // Read the file as a data URL
-      reader.readAsDataURL(selectedFile);
+          // Create a new gallery item
+          const newItem: GalleryItem = {
+            id: Date.now(), // Use timestamp as ID
+            type: 'image',
+            title: uploadTitle,
+            date: new Date().toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            }),
+            src: imageUrl,
+            category: 'user-uploads',
+            filename: selectedFile.name
+          };
 
+          console.log('Created local item:', newItem);
+
+          // Add the new item to the gallery items
+          setGalleryItems(prev => [...prev, newItem]);
+
+          // Save to local storage
+          try {
+            // Get existing uploads from local storage
+            const savedUploads = localStorage.getItem('userUploads');
+            let userUploads = [];
+
+            if (savedUploads) {
+              userUploads = JSON.parse(savedUploads);
+            }
+
+            // Add new upload and save back to local storage
+            userUploads.push(newItem);
+            localStorage.setItem('userUploads', JSON.stringify(userUploads));
+            console.log('Saved to local storage:', userUploads);
+          } catch (e) {
+            console.error('Error saving to local storage:', e);
+          }
+
+          // Reset form
+          setUploadTitle('');
+          setPreviewImage(null);
+          setSelectedFile(null);
+          setUploadDialogOpen(false);
+
+          // Reset file input
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+
+          // Switch to user uploads category
+          setActiveCategory('user-uploads');
+
+          // Show success message with warning
+          alert('Image uploaded to your device only. Server upload failed, so this image won\'t be available on other devices.');
+        };
+
+        reader.onerror = () => {
+          console.error('Error reading file');
+          alert('Failed to process image. Please try again.');
+        };
+
+        // Read the file as a data URL
+        reader.readAsDataURL(selectedFile);
+      }
     } catch (error) {
       console.error('Upload failed:', error);
       alert('Failed to upload image. Please try again.');
+    } finally {
       setIsUploading(false);
     }
   };
@@ -286,7 +349,21 @@ const Gallery = () => {
     if (!itemToDelete) return;
 
     try {
-      // Remove from state
+      // First try to delete from server
+      let serverDeleteSuccess = false;
+
+      try {
+        // Only attempt server delete if it's not a local-only item
+        // Local-only items typically have data URLs that start with "data:"
+        if (!itemToDelete.src.startsWith('data:')) {
+          serverDeleteSuccess = await deleteImage(itemToDelete.id);
+          console.log('Server delete result:', serverDeleteSuccess);
+        }
+      } catch (e) {
+        console.error('Error deleting from server:', e);
+      }
+
+      // Remove from state regardless of server result
       setGalleryItems(prev => prev.filter(item => item.id !== itemToDelete.id));
 
       // Also remove from local storage

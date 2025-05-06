@@ -14,8 +14,8 @@ const Navbar = () => {
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Courses', path: '/courses' },
-    { name: 'Events', path: '/events' },
     { name: 'Gallery', path: '/gallery' },
+    { name: 'About Us', path: '/about-us' },
   ];
 
   return (
@@ -49,7 +49,7 @@ const Navbar = () => {
           {/* Desktop Navigation */}
           <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-4">
             {navLinks.map((link) => (
-              <Link 
+              <Link
                 key={link.name}
                 to={link.path}
                 className="nav-link"
@@ -57,10 +57,10 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={toggleTheme} 
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
               className="ml-2"
             >
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
@@ -77,9 +77,9 @@ const Navbar = () => {
             >
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? (

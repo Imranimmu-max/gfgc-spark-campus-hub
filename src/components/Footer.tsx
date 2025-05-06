@@ -7,7 +7,7 @@ const Footer = () => {
   return (
     <footer className="bg-gray-100 dark:bg-gray-900 pt-12 pb-8">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">About GFGC</h3>
             <p className="text-sm text-gray-600 dark:text-gray-300">
@@ -26,13 +26,13 @@ const Footer = () => {
               </a>
             </div>
           </div>
-          
+
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Quick Links</h3>
             <ul className="space-y-2">
-              {['Home', 'Courses', 'Events', 'Gallery', 'About Us', 'Contact'].map((item) => (
+              {['Home', 'Courses', 'Gallery', 'About Us'].map((item) => (
                 <li key={item}>
-                  <Link 
+                  <Link
                     to={item === 'Home' ? '/' : `/${item.toLowerCase().replace(' ', '-')}`}
                     className="text-sm text-gray-600 hover:text-college-600 dark:text-gray-300 dark:hover:text-college-400"
                   >
@@ -42,23 +42,7 @@ const Footer = () => {
               ))}
             </ul>
           </div>
-          
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Resources</h3>
-            <ul className="space-y-2">
-              {['Student Portal', 'Academic Calendar', 'Library', 'Scholarships', 'Campus Map'].map((item) => (
-                <li key={item}>
-                  <a 
-                    href="#" 
-                    className="text-sm text-gray-600 hover:text-college-600 dark:text-gray-300 dark:hover:text-college-400"
-                  >
-                    {item}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-          
+
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Contact Us</h3>
             <div className="space-y-3">
@@ -67,20 +51,19 @@ const Footer = () => {
                 <span>Government First Grade College, Chikkaballpur District, Karnataka, India - 562101</span>
               </p>
               <p className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-                <Phone size={18} className="mr-2 flex-shrink-0 text-college-600 dark:text-college-400" />
-                <span>+91 9876543210</span>
-              </p>
-              <p className="flex items-center text-sm text-gray-600 dark:text-gray-300">
                 <Mail size={18} className="mr-2 flex-shrink-0 text-college-600 dark:text-college-400" />
                 <span>info@gfgcchikkaballpur.edu.in</span>
               </p>
             </div>
           </div>
         </div>
-        
+
         <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
           <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-            © {new Date().getFullYear()} Government First Grade College, Chikkaballpur. All rights reserved.
+            © {new Date().getFullYear()} Spark Campus Hub | Government First Grade College, Chikkaballpur. All rights reserved.
+          </p>
+          <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
+            Designed & Developed by Imran
           </p>
         </div>
       </div>

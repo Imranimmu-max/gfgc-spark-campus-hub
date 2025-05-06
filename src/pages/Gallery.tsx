@@ -1,95 +1,136 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-import { ChevronLeft, ChevronRight, Image, Film, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
+import { ChevronLeft, ChevronRight, Image as ImageIcon, Film, X, Upload, Plus, Trash2 } from 'lucide-react';
+import { fetchGalleryItems, uploadImage, deleteImage, getFullImageUrl, GalleryItem } from '@/services/api';
 
-const galleryItems = [
+// Default gallery items (will be combined with items from the server)
+const defaultGalleryItems = [
   {
     id: 1,
     type: 'image',
-    title: 'Annual Day Celebration',
+    title: 'GFGC Main Building',
     date: 'March 15, 2023',
-    src: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    category: 'events',
+    src: 'https://lh3.googleusercontent.com/gps-cs-s/AC9h4nonmoa93PuaT9Wv_g5AjBIpBt-YHY3vCBuUqKPO-5gRVzOLYDXmqRejN83nv4_664h5CvtwLeXNZV8EI2dFMnrzoPLVA9VlPszVY-hLNXoB-Lc7UHAo-arpubuUUW5_2VF_7-Y=s680-w680-h510-rw',
+    category: 'campus',
   },
   {
     id: 2,
     type: 'image',
-    title: 'Science Exhibition',
+    title: 'College Campus View',
     date: 'February 20, 2023',
-    src: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    category: 'academic',
+    src: 'https://media.getmyuni.com/azure/college-images-test/government-first-grade-college-chikkaballapur/f30ad73d38de4ec08b9ef72a1ee14d35.jpeg',
+    category: 'campus',
   },
   {
     id: 3,
     type: 'image',
-    title: 'Sports Meet 2023',
+    title: 'College Building',
     date: 'January 5, 2023',
-    src: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    category: 'sports',
+    src: 'https://media.getmyuni.com/azure/college-images-test/government-first-grade-college-chikkaballapur/a9967d73a4d4465099ea82926279129d.jpeg',
+    category: 'campus',
   },
   {
     id: 4,
-    type: 'video',
-    title: 'Cultural Performance',
+    type: 'image',
+    title: 'College Entrance',
     date: 'December 12, 2022',
-    src: 'https://example.com/video1.mp4', // This would be a real video URL
-    thumbnail: 'https://images.unsplash.com/photo-1605810230434-7631ac76ec81?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    category: 'cultural',
+    src: 'https://media.getmyuni.com/azure/college-images-test/government-first-grade-college-chikkaballapur/3bd1e4699e604ae684307884524dc6e7.jpeg',
+    category: 'campus',
   },
   {
     id: 5,
     type: 'image',
-    title: 'Campus Life',
-    date: 'November 30, 2022',
-    src: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    category: 'campus',
+    title: 'College Facilities',
+    date: 'November 10, 2022',
+    src: 'https://media.getmyuni.com/azure/college-images-test/government-first-grade-college-chikkaballapur/4fca197eee2b481b8fe6a92ebd50dc3c.jpeg',
+    category: 'academic',
   },
   {
     id: 6,
     type: 'image',
-    title: 'Guest Lecture Series',
-    date: 'October 18, 2022',
-    src: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    title: 'College Infrastructure',
+    date: 'October 5, 2022',
+    src: 'https://media.getmyuni.com/azure/college-images-test/government-first-grade-college-chikkaballapur/75db23ce756d4b25a0834adf1b4a757c.jpeg',
     category: 'academic',
   },
   {
     id: 7,
-    type: 'video',
-    title: 'Alumni Meet 2022',
-    date: 'September 25, 2022',
-    src: 'https://example.com/video2.mp4', // This would be a real video URL
-    thumbnail: 'https://images.unsplash.com/photo-1483058712412-4245e9b90334?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    category: 'events',
+    type: 'image',
+    title: 'Sports Ground',
+    date: 'September 15, 2022',
+    src: 'https://media.getmyuni.com/azure/college-images-test/government-first-grade-college-chikkaballapur/4586a165288144cab070a9acd2d38e50.jpeg',
+    category: 'sports',
   },
   {
     id: 8,
     type: 'image',
-    title: 'College Infrastructure',
-    date: 'August 10, 2022',
-    src: 'https://images.unsplash.com/photo-1473177104440-ffee2f376098?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    category: 'campus',
+    title: 'Cultural Activities',
+    date: 'August 20, 2022',
+    src: 'https://media.getmyuni.com/azure/college-images-test/government-first-grade-college-chikkaballapur/f30ad73d38de4ec08b9ef72a1ee14d35.jpeg',
+    category: 'cultural',
   },
 ];
 
 const galleryCategories = [
   { id: 'all', name: 'All' },
-  { id: 'events', name: 'Events' },
   { id: 'academic', name: 'Academic' },
   { id: 'sports', name: 'Sports' },
   { id: 'cultural', name: 'Cultural' },
   { id: 'campus', name: 'Campus' },
+  { id: 'user-uploads', name: 'User Uploads' },
 ];
 
 const Gallery = () => {
   const [activeCategory, setActiveCategory] = useState('all');
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [uploadTitle, setUploadTitle] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<GalleryItem | null>(null);
 
-  const filteredItems = galleryItems.filter(item => 
+  // Load gallery items from the server
+  useEffect(() => {
+    const loadGalleryItems = async () => {
+      setIsLoading(true);
+      try {
+        const userUploads = await fetchGalleryItems();
+        console.log('User uploads from server:', userUploads);
+
+        // Log the full URLs for debugging
+        userUploads.forEach(item => {
+          console.log('Item src:', item.src);
+          console.log('Full URL:', getFullImageUrl(item.src));
+        });
+
+        // Combine default items with user uploads
+        setGalleryItems([...defaultGalleryItems, ...userUploads]);
+      } catch (error) {
+        console.error('Failed to load gallery items:', error);
+        setGalleryItems(defaultGalleryItems);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadGalleryItems();
+  }, []);
+
+  const filteredItems = galleryItems.filter(item =>
     activeCategory === 'all' || item.category === activeCategory
   );
 
@@ -104,23 +145,106 @@ const Gallery = () => {
 
   const navigateLightbox = (direction) => {
     if (!selectedItem) return;
-    
+
     const currentIndex = filteredItems.findIndex(item => item.id === selectedItem.id);
     let newIndex;
-    
+
     if (direction === 'next') {
       newIndex = (currentIndex + 1) % filteredItems.length;
     } else {
       newIndex = (currentIndex - 1 + filteredItems.length) % filteredItems.length;
     }
-    
+
     setSelectedItem(filteredItems[newIndex]);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSelectedFile(file);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setPreviewImage(event.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile || !uploadTitle.trim()) return;
+
+    setIsUploading(true);
+    console.log('Starting upload process...');
+    console.log('File:', selectedFile.name, 'Size:', selectedFile.size, 'Type:', selectedFile.type);
+    console.log('Title:', uploadTitle);
+
+    try {
+      console.log('Calling uploadImage API...');
+      const newItem = await uploadImage(selectedFile, uploadTitle);
+      console.log('API response:', newItem);
+
+      if (newItem) {
+        console.log('Upload successful, adding to gallery items');
+        // Add the new item to the gallery items
+        setGalleryItems(prev => [...prev, newItem]);
+
+        // Reset form
+        setUploadTitle('');
+        setPreviewImage(null);
+        setSelectedFile(null);
+        setUploadDialogOpen(false);
+
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+
+        // Switch to user uploads category
+        setActiveCategory('user-uploads');
+
+        // Show success message
+        alert('Image uploaded successfully!');
+      } else {
+        console.error('Upload returned null item');
+        alert('Failed to upload image. Please try again.');
+      }
+    } catch (error) {
+      console.error('Upload failed:', error);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setIsUploading(false);
+      console.log('Upload process completed');
+    }
+  };
+
+  const confirmDeleteImage = (item: GalleryItem) => {
+    setItemToDelete(item);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteImage = async () => {
+    if (!itemToDelete) return;
+
+    try {
+      const success = await deleteImage(itemToDelete.id);
+
+      if (success) {
+        // Remove the item from the gallery items
+        setGalleryItems(prev => prev.filter(item => item.id !== itemToDelete.id));
+        setDeleteConfirmOpen(false);
+        setItemToDelete(null);
+      }
+    } catch (error) {
+      console.error('Delete failed:', error);
+      alert('Failed to delete image. Please try again.');
+    }
   };
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      
+
       <div className="bg-college-800 text-white py-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl font-bold mb-4">Gallery</h1>
@@ -129,96 +253,252 @@ const Gallery = () => {
           </p>
         </div>
       </div>
-      
+
       <main className="flex-grow bg-gray-50 dark:bg-gray-900 py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <Tabs 
-            defaultValue="all" 
-            className="mb-8"
-            onValueChange={setActiveCategory}
-          >
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
-              {galleryCategories.map(category => (
-                <TabsTrigger key={category.id} value={category.id}>
-                  {category.name}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {filteredItems.map((item) => (
-              <div 
-                key={item.id} 
-                className="group relative overflow-hidden rounded-lg shadow-md cursor-pointer card-hover"
-                onClick={() => openLightbox(item)}
-              >
-                <div className="aspect-square overflow-hidden bg-gray-200 dark:bg-gray-800">
-                  <img 
-                    src={item.type === 'image' ? item.src : item.thumbnail} 
-                    alt={item.title}
-                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-                    onError={(e) => {
-                      e.currentTarget.src = "https://via.placeholder.com/400x400?text=Gallery+Image";
-                    }}
+          <div className="flex justify-between items-center mb-8">
+            <Tabs
+              defaultValue="all"
+              className="flex-grow"
+              onValueChange={setActiveCategory}
+            >
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-7">
+                {galleryCategories.map(category => (
+                  <TabsTrigger key={category.id} value={category.id}>
+                    {category.name}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+
+            <Button
+              className="ml-4 bg-college-600 hover:bg-college-700 text-white"
+              onClick={() => setUploadDialogOpen(true)}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Upload Image
+            </Button>
+          </div>
+
+          {/* Upload Dialog */}
+          <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <h2 className="text-xl font-semibold mb-4">Upload Image</h2>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Image Title</Label>
+                  <Input
+                    id="title"
+                    placeholder="Enter a title for your image"
+                    value={uploadTitle}
+                    onChange={(e) => setUploadTitle(e.target.value)}
+                    disabled={isUploading}
                   />
-                  {item.type === 'video' && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
-                      <div className="h-12 w-12 flex items-center justify-center rounded-full bg-white text-college-600">
-                        <Film className="h-6 w-6" />
-                      </div>
-                    </div>
-                  )}
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute bottom-0 p-4 text-white">
-                    <h3 className="text-lg font-semibold">{item.title}</h3>
-                    <p className="text-sm opacity-80">{item.date}</p>
+
+                <div className="space-y-2">
+                  <Label htmlFor="image">Select Image</Label>
+                  <Input
+                    id="image"
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    disabled={isUploading}
+                  />
+                  <p className="text-xs text-gray-500">Maximum file size: 5MB</p>
+                </div>
+
+                {previewImage && (
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-500 mb-2">Preview:</p>
+                    <div className="aspect-square w-full max-w-xs mx-auto overflow-hidden rounded-md border border-gray-200">
+                      <img
+                        src={previewImage}
+                        alt="Preview"
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
                   </div>
-                  <div className="absolute top-3 right-3">
-                    {item.type === 'image' ? (
-                      <Image className="h-5 w-5 text-white" />
+                )}
+
+                <div className="flex justify-end gap-2 mt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setUploadDialogOpen(false)}
+                    disabled={isUploading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="bg-college-600 hover:bg-college-700 text-white"
+                    onClick={handleUpload}
+                    disabled={!previewImage || !uploadTitle.trim() || isUploading}
+                  >
+                    {isUploading ? (
+                      <>Uploading...</>
                     ) : (
-                      <Film className="h-5 w-5 text-white" />
+                      <>
+                        <Upload className="mr-2 h-4 w-4" /> Upload
+                      </>
                     )}
-                  </div>
+                  </Button>
                 </div>
               </div>
-            ))}
+            </DialogContent>
+          </Dialog>
+
+          {/* Delete Confirmation Dialog */}
+          <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+            <DialogContent className="sm:max-w-md">
+              <h2 className="text-xl font-semibold mb-4">Delete Image</h2>
+              <p className="mb-4">
+                Are you sure you want to delete this image? This action cannot be undone.
+              </p>
+              {itemToDelete && (
+                <div className="mb-4 p-2 border rounded-md">
+                  <div className="aspect-video w-full overflow-hidden rounded-md">
+                    <img
+                      src={itemToDelete.src.startsWith('http') ? itemToDelete.src : getFullImageUrl(itemToDelete.src)}
+                      alt={itemToDelete.title}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <p className="mt-2 font-medium">{itemToDelete.title}</p>
+                </div>
+              )}
+              <div className="flex justify-end gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setDeleteConfirmOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteImage}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {isLoading ? (
+              // Loading skeleton
+              Array.from({ length: 8 }).map((_, index) => (
+                <div key={index} className="rounded-lg shadow-md overflow-hidden">
+                  <div className="aspect-square bg-gray-200 dark:bg-gray-800 animate-pulse"></div>
+                  <div className="p-4 space-y-2">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3 animate-pulse"></div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              filteredItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="group relative overflow-hidden rounded-lg shadow-md card-hover"
+                >
+                  <div
+                    className="aspect-square overflow-hidden bg-gray-200 dark:bg-gray-800 cursor-pointer"
+                    onClick={() => openLightbox(item)}
+                  >
+                    <img
+                      src={item.src.startsWith('http') ? item.src : getFullImageUrl(item.src)}
+                      alt={item.title}
+                      className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                      onError={(e) => {
+                        console.error('Image load error for:', item.title, item.src);
+                        console.error('Full URL attempted:', item.src.startsWith('http') ? item.src : getFullImageUrl(item.src));
+                        e.currentTarget.src = "https://via.placeholder.com/400x400?text=Gallery+Image";
+                      }}
+                    />
+                    {item.type === 'video' && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
+                        <div className="h-12 w-12 flex items-center justify-center rounded-full bg-white text-college-600">
+                          <Film className="h-6 w-6" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="absolute bottom-0 p-4 text-white">
+                      <h3 className="text-lg font-semibold">{item.title}</h3>
+                      <p className="text-sm opacity-80">{item.date}</p>
+                    </div>
+                    <div className="absolute top-3 right-3 flex space-x-2">
+                      {item.category === 'user-uploads' && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            confirmDeleteImage(item);
+                          }}
+                          className="bg-red-500/70 hover:bg-red-500 p-1.5 rounded-full transition-colors"
+                          title="Delete image"
+                        >
+                          <Trash2 className="h-4 w-4 text-white" />
+                        </button>
+                      )}
+                      {item.type === 'image' ? (
+                        <div className="bg-black/50 p-1.5 rounded-full">
+                          <ImageIcon className="h-4 w-4 text-white" />
+                        </div>
+                      ) : (
+                        <div className="bg-black/50 p-1.5 rounded-full">
+                          <Film className="h-4 w-4 text-white" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
-          
+
           {filteredItems.length === 0 && (
             <div className="text-center py-12">
-              <Image className="h-16 w-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
+              <ImageIcon className="h-16 w-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                 No items found
               </h3>
               <p className="text-gray-600 dark:text-gray-300">
-                No gallery items available for this category.
+                {activeCategory === 'user-uploads'
+                  ? "You haven't uploaded any images yet. Click the 'Upload Image' button to add your first image."
+                  : "No gallery items available for this category."}
               </p>
+              {activeCategory === 'user-uploads' && (
+                <Button
+                  className="mt-4 bg-college-600 hover:bg-college-700 text-white"
+                  onClick={() => setUploadDialogOpen(true)}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Upload Image
+                </Button>
+              )}
             </div>
           )}
         </div>
       </main>
-      
+
       {/* Lightbox */}
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
         <DialogContent className="sm:max-w-4xl p-0 bg-transparent border-0 overflow-hidden">
           {selectedItem && (
             <div className="relative">
               <div className="absolute top-2 right-2 z-10">
-                <button 
+                <button
                   onClick={closeLightbox}
                   className="bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              
+
               <div className="bg-black flex items-center justify-center">
                 {selectedItem.type === 'image' ? (
-                  <img 
-                    src={selectedItem.src} 
+                  <img
+                    src={selectedItem.src.startsWith('http') ? selectedItem.src : getFullImageUrl(selectedItem.src)}
                     alt={selectedItem.title}
                     className="max-h-[80vh] w-auto"
                     onError={(e) => {
@@ -227,8 +507,8 @@ const Gallery = () => {
                   />
                 ) : (
                   <div className="relative aspect-video w-full max-h-[80vh]">
-                    <img 
-                      src={selectedItem.thumbnail} 
+                    <img
+                      src={selectedItem.thumbnail}
                       alt={selectedItem.title}
                       className="w-full h-full object-cover"
                       onError={(e) => {
@@ -244,25 +524,25 @@ const Gallery = () => {
                   </div>
                 )}
               </div>
-              
+
               <div className="absolute left-2 top-1/2 transform -translate-y-1/2">
-                <button 
+                <button
                   onClick={() => navigateLightbox('prev')}
                   className="bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
                 >
                   <ChevronLeft className="h-6 w-6" />
                 </button>
               </div>
-              
+
               <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-                <button 
+                <button
                   onClick={() => navigateLightbox('next')}
                   className="bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
                 >
                   <ChevronRight className="h-6 w-6" />
                 </button>
               </div>
-              
+
               <div className="bg-white dark:bg-gray-900 p-4">
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                   {selectedItem.title}
@@ -275,7 +555,7 @@ const Gallery = () => {
           )}
         </DialogContent>
       </Dialog>
-      
+
       <Footer />
     </div>
   );

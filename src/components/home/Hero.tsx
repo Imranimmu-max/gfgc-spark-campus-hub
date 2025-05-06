@@ -13,7 +13,7 @@ const Hero = () => {
         <div className="absolute inset-0 bg-college-800 opacity-10 dark:opacity-30"></div>
         <div className="absolute inset-0 bg-gradient-to-br from-college-800/20 via-transparent to-transparent dark:from-college-800/40"></div>
       </div>
-      
+
       <div className="container mx-auto px-4 py-16 sm:px-6 lg:px-8 relative">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8 text-center lg:text-left">
@@ -24,14 +24,14 @@ const Hero = () => {
               Empowering minds, shaping futures. Join us on a journey of academic excellence, innovation, and holistic development.
             </p>
           </div>
-          
+
           <div className="hidden lg:block">
             <div className="relative w-full h-[450px] animate-float">
               <div className="w-full h-full overflow-hidden rounded-lg shadow-xl">
                 {!imageError ? (
-                  <img 
-                    src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                    alt="College students"
+                  <img
+                    src="/images/gfgc-college.jpg"
+                    alt="GFGC Chikkaballpur Campus"
                     className="object-cover w-full h-full"
                     onError={() => setImageError(true)}
                   />

@@ -8,19 +8,19 @@ const courses = [
   {
     title: 'Bachelor of Commerce (B.Com)',
     description: 'A comprehensive program focusing on business, accounting, finance, and economics.',
-    image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+    image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=2000&auto=format&fit=crop',
     color: 'bg-blue-500',
   },
   {
     title: 'Bachelor of Science (B.Sc)',
     description: 'Diverse science programs in Physics, Chemistry, Mathematics, Computer Science, and more.',
-    image: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+    image: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?q=80&w=2000&auto=format&fit=crop',
     color: 'bg-green-500',
   },
   {
     title: 'Bachelor of Arts (B.A)',
     description: 'Programs in humanities, social sciences, languages, history, political science, and more.',
-    image: 'https://images.unsplash.com/photo-1525921429624-479b6a26d84d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+    image: 'https://images.unsplash.com/photo-1525921429624-479b6a26d84d?q=80&w=2000&auto=format&fit=crop',
     color: 'bg-purple-500',
   },
 ];
@@ -37,19 +37,21 @@ const CourseHighlights = () => {
             Explore our diverse range of undergraduate programs designed to prepare you for success
           </p>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {courses.map((course, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className="relative rounded-xl overflow-hidden shadow-md card-hover bg-white dark:bg-gray-800"
             >
-              <div className="h-48 overflow-hidden">
-                <img 
-                  src={course.image} 
+              <div className="h-64 overflow-hidden">
+                <img
+                  src={course.image}
                   alt={course.title}
                   className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500"
+                  loading="eager"
                   onError={(e) => {
+                    console.error('Image load error for:', course.title);
                     e.currentTarget.src = "https://via.placeholder.com/600x400?text=Course+Image";
                   }}
                 />
@@ -64,8 +66,8 @@ const CourseHighlights = () => {
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
                   {course.description}
                 </p>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full justify-between"
                   onClick={() => navigate('/courses')}
                 >
@@ -76,10 +78,10 @@ const CourseHighlights = () => {
             </div>
           ))}
         </div>
-        
+
         <div className="text-center mt-12">
-          <Button 
-            variant="default" 
+          <Button
+            variant="default"
             size="lg"
             onClick={() => navigate('/courses')}
             className="bg-college-600 hover:bg-college-700 text-white"

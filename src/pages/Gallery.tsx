@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChevronLeft, ChevronRight, Image as ImageIcon, Film, X, Upload, Plus, Trash2 } from 'lucide-react';
 import { fetchGalleryItems, uploadImage, deleteImage, getFullImageUrl, GalleryItem } from '@/services/api';
+import { uploadToBlob, deleteFromBlob, listBlobImages, BlobImage } from '@/services/blobStorage';
 
 // Default gallery items (will be combined with items from the server)
 const defaultGalleryItems = [
@@ -103,18 +104,35 @@ const Gallery = () => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<GalleryItem | null>(null);
 
-  // Load gallery items from server and local storage
+  // Load gallery items from Vercel Blob Storage and local storage
   useEffect(() => {
     const loadGalleryItems = async () => {
       setIsLoading(true);
       try {
-        // First try to get uploads from server (primary source)
-        let serverUploads = [];
+        // First try to get uploads from Vercel Blob Storage (primary source)
+        let blobUploads: GalleryItem[] = [];
         try {
-          serverUploads = await fetchGalleryItems();
-          console.log('User uploads from server:', serverUploads);
+          const blobImages = await listBlobImages();
+          console.log('Images from Vercel Blob Storage:', blobImages);
+
+          // Convert BlobImage to GalleryItem
+          blobUploads = blobImages.map(blob => ({
+            id: parseInt(blob.pathname.split('-')[0]) || Date.now(), // Extract timestamp from filename or use current time
+            type: 'image',
+            title: blob.pathname.split('.')[0], // Use filename as title
+            date: new Date().toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            }),
+            src: blob.url,
+            category: 'user-uploads',
+            filename: blob.pathname
+          }));
+
+          console.log('Converted Blob Storage images to gallery items:', blobUploads);
         } catch (e) {
-          console.error('Error fetching from server:', e);
+          console.error('Error fetching from Vercel Blob Storage:', e);
         }
 
         // Then try to load user uploads from local storage (for offline support)
@@ -126,20 +144,22 @@ const Gallery = () => {
             userUploads = JSON.parse(savedUploads);
             console.log('User uploads from local storage:', userUploads);
 
-            // Filter out any local uploads that already exist on the server
-            // This prevents duplicates and ensures server data takes precedence
-            if (serverUploads.length > 0) {
-              const serverIds = serverUploads.map(item => item.id);
-              userUploads = userUploads.filter(item => !serverIds.includes(item.id));
-              console.log('Filtered local uploads (removing server duplicates):', userUploads);
+            // Filter out any local uploads that already exist in Blob Storage
+            // This prevents duplicates and ensures Blob Storage data takes precedence
+            if (blobUploads.length > 0) {
+              const blobUrls = blobUploads.map(item => item.src);
+              userUploads = userUploads.filter(item =>
+                !blobUrls.includes(item.src) && item.src.startsWith('data:')
+              );
+              console.log('Filtered local uploads (removing Blob Storage duplicates):', userUploads);
             }
           } catch (e) {
             console.error('Error parsing saved uploads:', e);
           }
         }
 
-        // Combine all sources, with server taking precedence
-        const allUploads = [...serverUploads, ...userUploads];
+        // Combine all sources, with Blob Storage taking precedence
+        const allUploads = [...blobUploads, ...userUploads];
 
         // Combine default items with user uploads
         setGalleryItems([...defaultGalleryItems, ...allUploads]);
@@ -204,16 +224,31 @@ const Gallery = () => {
     console.log('Title:', uploadTitle);
 
     try {
-      // First, upload to the server
-      const uploadedItem = await uploadImage(selectedFile, uploadTitle);
+      // Upload directly to Vercel Blob Storage
+      const blobUpload = await uploadToBlob(selectedFile);
 
-      if (uploadedItem) {
-        console.log('Successfully uploaded to server:', uploadedItem);
+      if (blobUpload) {
+        console.log('Successfully uploaded to Vercel Blob Storage:', blobUpload);
+
+        // Create a new gallery item
+        const newItem: GalleryItem = {
+          id: Date.now(), // Use timestamp as ID
+          type: 'image',
+          title: uploadTitle,
+          date: new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }),
+          src: blobUpload.url, // Use the Blob Storage URL
+          category: 'user-uploads',
+          filename: blobUpload.pathname
+        };
 
         // Add the new item to the gallery items
-        setGalleryItems(prev => [...prev, uploadedItem]);
+        setGalleryItems(prev => [...prev, newItem]);
 
-        // Also save a reference in local storage for faster loading
+        // Save to local storage for faster loading and offline access
         try {
           // Get existing uploads from local storage
           const savedUploads = localStorage.getItem('userUploads');
@@ -224,20 +259,9 @@ const Gallery = () => {
           }
 
           // Add new upload reference and save back to local storage
-          // Note: We're only storing the ID and basic info, not the full image data
-          const uploadReference = {
-            id: uploadedItem.id,
-            type: uploadedItem.type,
-            title: uploadedItem.title,
-            date: uploadedItem.date,
-            src: uploadedItem.src,
-            category: uploadedItem.category,
-            filename: uploadedItem.filename
-          };
-
-          userUploads.push(uploadReference);
+          userUploads.push(newItem);
           localStorage.setItem('userUploads', JSON.stringify(userUploads));
-          console.log('Saved reference to local storage:', userUploads);
+          console.log('Saved to local storage:', userUploads);
         } catch (e) {
           console.error('Error saving to local storage:', e);
         }
@@ -259,8 +283,8 @@ const Gallery = () => {
         // Show success message
         alert('Image uploaded successfully! Your image will now be available across all devices.');
       } else {
-        // Fallback to local storage only if server upload fails
-        console.log('Server upload failed, falling back to local storage only');
+        // Fallback to local storage only if Blob Storage upload fails
+        console.log('Blob Storage upload failed, falling back to local storage only');
 
         // Create a client-side only version of the upload
         const reader = new FileReader();
@@ -321,7 +345,7 @@ const Gallery = () => {
           setActiveCategory('user-uploads');
 
           // Show success message with warning
-          alert('Image uploaded to your device only. Server upload failed, so this image won\'t be available on other devices.');
+          alert('Image uploaded to your device only. Cloud storage upload failed, so this image won\'t be available on other devices.');
         };
 
         reader.onerror = () => {
@@ -349,21 +373,21 @@ const Gallery = () => {
     if (!itemToDelete) return;
 
     try {
-      // First try to delete from server
-      let serverDeleteSuccess = false;
+      // First try to delete from Vercel Blob Storage
+      let blobDeleteSuccess = false;
 
       try {
-        // Only attempt server delete if it's not a local-only item
+        // Only attempt Blob Storage delete if it's not a local-only item
         // Local-only items typically have data URLs that start with "data:"
         if (!itemToDelete.src.startsWith('data:')) {
-          serverDeleteSuccess = await deleteImage(itemToDelete.id);
-          console.log('Server delete result:', serverDeleteSuccess);
+          blobDeleteSuccess = await deleteFromBlob(itemToDelete.src);
+          console.log('Blob Storage delete result:', blobDeleteSuccess);
         }
       } catch (e) {
-        console.error('Error deleting from server:', e);
+        console.error('Error deleting from Blob Storage:', e);
       }
 
-      // Remove from state regardless of server result
+      // Remove from state regardless of Blob Storage result
       setGalleryItems(prev => prev.filter(item => item.id !== itemToDelete.id));
 
       // Also remove from local storage

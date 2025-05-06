@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/api/blob", "destination": "/api/blob.js" },
     { "source": "/api/(.*)", "destination": "/server/server.js" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
@@ -19,5 +20,7 @@
   ],
   "env": {
     "VERCEL": "1"
-  }
+  },
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist"
 }

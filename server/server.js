@@ -8,7 +8,11 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:8080', 'http://localhost:8081', 'https://gfgc-spark-campus-hub.vercel.app'],
+  methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -29,7 +33,7 @@ const storage = multer.diskStorage({
 });
 
 // Create the multer instance
-const upload = multer({ 
+const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {
@@ -86,16 +90,16 @@ app.post('/api/gallery/upload', upload.single('image'), (req, res) => {
 
     // Create the image URL
     const imageUrl = `/uploads/${req.file.filename}`;
-    
+
     // Create new gallery item
     const newItem = {
       id: Date.now(),
       type: 'image',
       title,
-      date: new Date().toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+      date: new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
       }),
       src: imageUrl,
       category: 'user-uploads',
@@ -104,7 +108,7 @@ app.post('/api/gallery/upload', upload.single('image'), (req, res) => {
 
     // Add to gallery data
     galleryData.push(newItem);
-    
+
     // Save to file
     saveGalleryData();
 
@@ -119,13 +123,13 @@ app.post('/api/gallery/upload', upload.single('image'), (req, res) => {
 app.delete('/api/gallery/:id', (req, res) => {
   const id = parseInt(req.params.id);
   const itemIndex = galleryData.findIndex(item => item.id === id);
-  
+
   if (itemIndex === -1) {
     return res.status(404).json({ error: 'Image not found' });
   }
-  
+
   const item = galleryData[itemIndex];
-  
+
   // Remove the file
   if (item.filename) {
     const filePath = path.join(__dirname, 'uploads', item.filename);
@@ -137,13 +141,13 @@ app.delete('/api/gallery/:id', (req, res) => {
       console.error('Error deleting file:', error);
     }
   }
-  
+
   // Remove from gallery data
   galleryData.splice(itemIndex, 1);
-  
+
   // Save to file
   saveGalleryData();
-  
+
   res.json({ message: 'Image deleted successfully' });
 });
 

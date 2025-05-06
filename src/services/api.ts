@@ -1,6 +1,9 @@
 // API service for gallery operations
 
-const API_URL = 'http://localhost:5000/api';
+// Use environment-based API URL
+const API_URL = import.meta.env.PROD
+  ? 'https://gfgc-spark-campus-hub-api.vercel.app/api'  // Production API URL
+  : 'http://localhost:5000/api';  // Development API URL
 
 // Types
 export interface GalleryItem {
@@ -92,6 +95,10 @@ export const getFullImageUrl = (relativePath: string): string => {
     return relativePath;
   }
 
-  // For local development, use the hardcoded server URL
-  return `http://localhost:5000${relativePath}`;
+  // Use the appropriate base URL depending on environment
+  const baseUrl = import.meta.env.PROD
+    ? 'https://gfgc-spark-campus-hub-api.vercel.app'  // Production server URL
+    : 'http://localhost:5000';  // Development server URL
+
+  return `${baseUrl}${relativePath}`;
 };

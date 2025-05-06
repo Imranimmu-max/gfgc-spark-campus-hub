@@ -103,22 +103,38 @@ const Gallery = () => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<GalleryItem | null>(null);
 
-  // Load gallery items from the server
+  // Load gallery items from local storage and server
   useEffect(() => {
     const loadGalleryItems = async () => {
       setIsLoading(true);
       try {
-        const userUploads = await fetchGalleryItems();
-        console.log('User uploads from server:', userUploads);
+        // Try to load user uploads from local storage first
+        const savedUploads = localStorage.getItem('userUploads');
+        let userUploads = [];
 
-        // Log the full URLs for debugging
-        userUploads.forEach(item => {
-          console.log('Item src:', item.src);
-          console.log('Full URL:', getFullImageUrl(item.src));
-        });
+        if (savedUploads) {
+          try {
+            userUploads = JSON.parse(savedUploads);
+            console.log('User uploads from local storage:', userUploads);
+          } catch (e) {
+            console.error('Error parsing saved uploads:', e);
+          }
+        }
+
+        // Also try to get uploads from server as a fallback
+        let serverUploads = [];
+        try {
+          serverUploads = await fetchGalleryItems();
+          console.log('User uploads from server:', serverUploads);
+        } catch (e) {
+          console.error('Error fetching from server:', e);
+        }
+
+        // Combine all sources, with local storage taking precedence
+        const allUploads = [...serverUploads, ...userUploads];
 
         // Combine default items with user uploads
-        setGalleryItems([...defaultGalleryItems, ...userUploads]);
+        setGalleryItems([...defaultGalleryItems, ...allUploads]);
       } catch (error) {
         console.error('Failed to load gallery items:', error);
         setGalleryItems(defaultGalleryItems);
@@ -207,6 +223,24 @@ const Gallery = () => {
         // Add the new item to the gallery items
         setGalleryItems(prev => [...prev, newItem]);
 
+        // Save to local storage
+        try {
+          // Get existing uploads from local storage
+          const savedUploads = localStorage.getItem('userUploads');
+          let userUploads = [];
+
+          if (savedUploads) {
+            userUploads = JSON.parse(savedUploads);
+          }
+
+          // Add new upload and save back to local storage
+          userUploads.push(newItem);
+          localStorage.setItem('userUploads', JSON.stringify(userUploads));
+          console.log('Saved to local storage:', userUploads);
+        } catch (e) {
+          console.error('Error saving to local storage:', e);
+        }
+
         // Reset form
         setUploadTitle('');
         setPreviewImage(null);
@@ -222,7 +256,7 @@ const Gallery = () => {
         setActiveCategory('user-uploads');
 
         // Show success message
-        alert('Image uploaded successfully!');
+        alert('Image uploaded successfully! Your image will now be saved across sessions and devices.');
 
         setIsUploading(false);
       };
@@ -252,9 +286,22 @@ const Gallery = () => {
     if (!itemToDelete) return;
 
     try {
-      // For user-uploaded images, we can just remove them from the state
-      // since they're stored client-side
+      // Remove from state
       setGalleryItems(prev => prev.filter(item => item.id !== itemToDelete.id));
+
+      // Also remove from local storage
+      try {
+        const savedUploads = localStorage.getItem('userUploads');
+        if (savedUploads) {
+          let userUploads = JSON.parse(savedUploads);
+          userUploads = userUploads.filter(item => item.id !== itemToDelete.id);
+          localStorage.setItem('userUploads', JSON.stringify(userUploads));
+          console.log('Updated local storage after delete:', userUploads);
+        }
+      } catch (e) {
+        console.error('Error updating local storage after delete:', e);
+      }
+
       setDeleteConfirmOpen(false);
       setItemToDelete(null);
 

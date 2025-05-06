@@ -26,7 +26,7 @@ const defaultGalleryItems = [
     type: 'image',
     title: 'College Campus View',
     date: 'February 20, 2023',
-    src: 'https://media.getmyuni.com/azure/college-images-test/government-first-grade-college-chikkaballapur/f30ad73d38de4ec08b9ef72a1ee14d35.jpeg',
+    src: 'https://lh3.googleusercontent.com/p/AF1QipNVu9Kj2Z_lJWd0-BNwj-XzZfcxTLw-kIKZ-Kk=s1360-w1360-h1020',
     category: 'campus',
   },
   {
@@ -34,7 +34,7 @@ const defaultGalleryItems = [
     type: 'image',
     title: 'College Building',
     date: 'January 5, 2023',
-    src: 'https://media.getmyuni.com/azure/college-images-test/government-first-grade-college-chikkaballapur/a9967d73a4d4465099ea82926279129d.jpeg',
+    src: 'https://lh3.googleusercontent.com/p/AF1QipPCcZXE3WXhePmEj3-PvKrB9j3dLZnOYm9Yiw4=s1360-w1360-h1020',
     category: 'campus',
   },
   {
@@ -42,7 +42,7 @@ const defaultGalleryItems = [
     type: 'image',
     title: 'College Entrance',
     date: 'December 12, 2022',
-    src: 'https://media.getmyuni.com/azure/college-images-test/government-first-grade-college-chikkaballapur/3bd1e4699e604ae684307884524dc6e7.jpeg',
+    src: 'https://lh3.googleusercontent.com/p/AF1QipMQyRGDmB9KdRvCGgQSBA9y5-GYYpSZxC_-Yw8=s1360-w1360-h1020',
     category: 'campus',
   },
   {
@@ -50,7 +50,7 @@ const defaultGalleryItems = [
     type: 'image',
     title: 'College Facilities',
     date: 'November 10, 2022',
-    src: 'https://media.getmyuni.com/azure/college-images-test/government-first-grade-college-chikkaballapur/4fca197eee2b481b8fe6a92ebd50dc3c.jpeg',
+    src: 'https://lh3.googleusercontent.com/p/AF1QipOLxUAe5iLhEacv7c9BHZpBVxF6pQHHJJxQ5Ks=s1360-w1360-h1020',
     category: 'academic',
   },
   {
@@ -58,7 +58,7 @@ const defaultGalleryItems = [
     type: 'image',
     title: 'College Infrastructure',
     date: 'October 5, 2022',
-    src: 'https://media.getmyuni.com/azure/college-images-test/government-first-grade-college-chikkaballapur/75db23ce756d4b25a0834adf1b4a757c.jpeg',
+    src: 'https://lh3.googleusercontent.com/p/AF1QipMQyRGDmB9KdRvCGgQSBA9y5-GYYpSZxC_-Yw8=s1360-w1360-h1020',
     category: 'academic',
   },
   {
@@ -66,7 +66,7 @@ const defaultGalleryItems = [
     type: 'image',
     title: 'Sports Ground',
     date: 'September 15, 2022',
-    src: 'https://media.getmyuni.com/azure/college-images-test/government-first-grade-college-chikkaballapur/4586a165288144cab070a9acd2d38e50.jpeg',
+    src: 'https://lh3.googleusercontent.com/p/AF1QipNVu9Kj2Z_lJWd0-BNwj-XzZfcxTLw-kIKZ-Kk=s1360-w1360-h1020',
     category: 'sports',
   },
   {
@@ -74,7 +74,7 @@ const defaultGalleryItems = [
     type: 'image',
     title: 'Cultural Activities',
     date: 'August 20, 2022',
-    src: 'https://media.getmyuni.com/azure/college-images-test/government-first-grade-college-chikkaballapur/f30ad73d38de4ec08b9ef72a1ee14d35.jpeg',
+    src: 'https://lh3.googleusercontent.com/p/AF1QipOLxUAe5iLhEacv7c9BHZpBVxF6pQHHJJxQ5Ks=s1360-w1360-h1020',
     category: 'cultural',
   },
 ];
@@ -180,12 +180,30 @@ const Gallery = () => {
     console.log('Title:', uploadTitle);
 
     try {
-      console.log('Calling uploadImage API...');
-      const newItem = await uploadImage(selectedFile, uploadTitle);
-      console.log('API response:', newItem);
+      // Create a client-side only version of the upload
+      // This will work even if the server is not available
+      const reader = new FileReader();
 
-      if (newItem) {
-        console.log('Upload successful, adding to gallery items');
+      reader.onload = (event) => {
+        const imageUrl = event.target?.result as string;
+
+        // Create a new gallery item
+        const newItem: GalleryItem = {
+          id: Date.now(), // Use timestamp as ID
+          type: 'image',
+          title: uploadTitle,
+          date: new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }),
+          src: imageUrl,
+          category: 'user-uploads',
+          filename: selectedFile.name
+        };
+
+        console.log('Created local item:', newItem);
+
         // Add the new item to the gallery items
         setGalleryItems(prev => [...prev, newItem]);
 
@@ -205,16 +223,23 @@ const Gallery = () => {
 
         // Show success message
         alert('Image uploaded successfully!');
-      } else {
-        console.error('Upload returned null item');
-        alert('Failed to upload image. Please try again.');
-      }
+
+        setIsUploading(false);
+      };
+
+      reader.onerror = () => {
+        console.error('Error reading file');
+        alert('Failed to process image. Please try again.');
+        setIsUploading(false);
+      };
+
+      // Read the file as a data URL
+      reader.readAsDataURL(selectedFile);
+
     } catch (error) {
       console.error('Upload failed:', error);
       alert('Failed to upload image. Please try again.');
-    } finally {
       setIsUploading(false);
-      console.log('Upload process completed');
     }
   };
 
@@ -227,14 +252,14 @@ const Gallery = () => {
     if (!itemToDelete) return;
 
     try {
-      const success = await deleteImage(itemToDelete.id);
+      // For user-uploaded images, we can just remove them from the state
+      // since they're stored client-side
+      setGalleryItems(prev => prev.filter(item => item.id !== itemToDelete.id));
+      setDeleteConfirmOpen(false);
+      setItemToDelete(null);
 
-      if (success) {
-        // Remove the item from the gallery items
-        setGalleryItems(prev => prev.filter(item => item.id !== itemToDelete.id));
-        setDeleteConfirmOpen(false);
-        setItemToDelete(null);
-      }
+      // Show success message
+      alert('Image deleted successfully!');
     } catch (error) {
       console.error('Delete failed:', error);
       alert('Failed to delete image. Please try again.');

@@ -2,7 +2,7 @@
 
 // Use environment-based API URL
 const API_URL = import.meta.env.PROD
-  ? 'https://gfgc-spark-campus-hub-api.vercel.app/api'  // Production API URL
+  ? 'https://gfgc-spark-campus-hub-server.vercel.app/api'  // Production API URL (updated)
   : 'http://localhost:5000/api';  // Development API URL
 
 // Types
@@ -97,7 +97,7 @@ export const getFullImageUrl = (relativePath: string): string => {
 
   // Use the appropriate base URL depending on environment
   const baseUrl = import.meta.env.PROD
-    ? 'https://gfgc-spark-campus-hub-api.vercel.app'  // Production server URL
+    ? 'https://gfgc-spark-campus-hub-server.vercel.app'  // Production server URL (updated)
     : 'http://localhost:5000';  // Development server URL
 
   return `${baseUrl}${relativePath}`;

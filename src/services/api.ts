@@ -2,7 +2,7 @@
 
 // Use environment-based API URL
 const API_URL = import.meta.env.PROD
-  ? 'https://gfgc-spark-campus-hub-server.vercel.app/api'  // Production API URL (updated)
+  ? 'https://https://gfgc.vercel.app/api'  // Production API URL (updated)
   : 'http://localhost:5000/api';  // Development API URL
 
 // For debugging

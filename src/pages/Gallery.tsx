@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChevronLeft, ChevronRight, Image as ImageIcon, Film, X, Upload, Plus, Trash2 } from 'lucide-react';
 import { fetchGalleryItems, uploadImage, deleteImage, getFullImageUrl, GalleryItem } from '@/services/api';
-import { uploadToBlob, deleteFromBlob, listBlobImages, BlobImage } from '@/services/blobStorage';
+import { uploadToFirebase, deleteFromFirebase, listFirebaseImages, FirebaseImage } from '@/services/firebase';
 
 // Default gallery items (will be combined with items from the server)
 const defaultGalleryItems = [
@@ -104,35 +104,35 @@ const Gallery = () => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<GalleryItem | null>(null);
 
-  // Load gallery items from Vercel Blob Storage and local storage
+  // Load gallery items from Firebase Storage and local storage
   useEffect(() => {
     const loadGalleryItems = async () => {
       setIsLoading(true);
       try {
-        // First try to get uploads from Vercel Blob Storage (primary source)
-        let blobUploads: GalleryItem[] = [];
+        // First try to get uploads from Firebase Storage (primary source)
+        let firebaseUploads: GalleryItem[] = [];
         try {
-          const blobImages = await listBlobImages();
-          console.log('Images from Vercel Blob Storage:', blobImages);
+          const firebaseImages = await listFirebaseImages();
+          console.log('Images from Firebase Storage:', firebaseImages);
 
-          // Convert BlobImage to GalleryItem
-          blobUploads = blobImages.map(blob => ({
-            id: parseInt(blob.pathname.split('-')[0]) || Date.now(), // Extract timestamp from filename or use current time
+          // Convert FirebaseImage to GalleryItem
+          firebaseUploads = firebaseImages.map(image => ({
+            id: parseInt(image.name.split('-')[0]) || Date.now(), // Extract timestamp from filename or use current time
             type: 'image',
-            title: blob.pathname.split('.')[0], // Use filename as title
+            title: image.name.split('.')[0], // Use filename as title
             date: new Date().toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'long',
               day: 'numeric'
             }),
-            src: blob.url,
+            src: image.url,
             category: 'user-uploads',
-            filename: blob.pathname
+            filename: image.path
           }));
 
-          console.log('Converted Blob Storage images to gallery items:', blobUploads);
+          console.log('Converted Firebase Storage images to gallery items:', firebaseUploads);
         } catch (e) {
-          console.error('Error fetching from Vercel Blob Storage:', e);
+          console.error('Error fetching from Firebase Storage:', e);
         }
 
         // Then try to load user uploads from local storage (for offline support)
@@ -144,22 +144,22 @@ const Gallery = () => {
             userUploads = JSON.parse(savedUploads);
             console.log('User uploads from local storage:', userUploads);
 
-            // Filter out any local uploads that already exist in Blob Storage
-            // This prevents duplicates and ensures Blob Storage data takes precedence
-            if (blobUploads.length > 0) {
-              const blobUrls = blobUploads.map(item => item.src);
+            // Filter out any local uploads that already exist in Firebase Storage
+            // This prevents duplicates and ensures Firebase Storage data takes precedence
+            if (firebaseUploads.length > 0) {
+              const firebaseUrls = firebaseUploads.map(item => item.src);
               userUploads = userUploads.filter(item =>
-                !blobUrls.includes(item.src) && item.src.startsWith('data:')
+                !firebaseUrls.includes(item.src) && item.src.startsWith('data:')
               );
-              console.log('Filtered local uploads (removing Blob Storage duplicates):', userUploads);
+              console.log('Filtered local uploads (removing Firebase Storage duplicates):', userUploads);
             }
           } catch (e) {
             console.error('Error parsing saved uploads:', e);
           }
         }
 
-        // Combine all sources, with Blob Storage taking precedence
-        const allUploads = [...blobUploads, ...userUploads];
+        // Combine all sources, with Firebase Storage taking precedence
+        const allUploads = [...firebaseUploads, ...userUploads];
 
         // Combine default items with user uploads
         setGalleryItems([...defaultGalleryItems, ...allUploads]);
@@ -224,11 +224,11 @@ const Gallery = () => {
     console.log('Title:', uploadTitle);
 
     try {
-      // Upload directly to Vercel Blob Storage
-      const blobUpload = await uploadToBlob(selectedFile);
+      // Upload directly to Firebase Storage
+      const firebaseUpload = await uploadToFirebase(selectedFile);
 
-      if (blobUpload) {
-        console.log('Successfully uploaded to Vercel Blob Storage:', blobUpload);
+      if (firebaseUpload) {
+        console.log('Successfully uploaded to Firebase Storage:', firebaseUpload);
 
         // Create a new gallery item
         const newItem: GalleryItem = {
@@ -240,9 +240,9 @@ const Gallery = () => {
             month: 'long',
             day: 'numeric'
           }),
-          src: blobUpload.url, // Use the Blob Storage URL
+          src: firebaseUpload.url, // Use the Firebase Storage URL
           category: 'user-uploads',
-          filename: blobUpload.pathname
+          filename: firebaseUpload.path
         };
 
         // Add the new item to the gallery items
@@ -283,8 +283,8 @@ const Gallery = () => {
         // Show success message
         alert('Image uploaded successfully! Your image will now be available across all devices.');
       } else {
-        // Fallback to local storage only if Blob Storage upload fails
-        console.log('Blob Storage upload failed, falling back to local storage only');
+        // Fallback to local storage only if Firebase Storage upload fails
+        console.log('Firebase Storage upload failed, falling back to local storage only');
 
         // Create a client-side only version of the upload
         const reader = new FileReader();
@@ -373,21 +373,23 @@ const Gallery = () => {
     if (!itemToDelete) return;
 
     try {
-      // First try to delete from Vercel Blob Storage
-      let blobDeleteSuccess = false;
+      // First try to delete from Firebase Storage
+      let firebaseDeleteSuccess = false;
 
       try {
-        // Only attempt Blob Storage delete if it's not a local-only item
+        // Only attempt Firebase Storage delete if it's not a local-only item
         // Local-only items typically have data URLs that start with "data:"
         if (!itemToDelete.src.startsWith('data:')) {
-          blobDeleteSuccess = await deleteFromBlob(itemToDelete.src);
-          console.log('Blob Storage delete result:', blobDeleteSuccess);
+          // For Firebase, we need the path, not the URL
+          const path = itemToDelete.filename;
+          firebaseDeleteSuccess = await deleteFromFirebase(path);
+          console.log('Firebase Storage delete result:', firebaseDeleteSuccess);
         }
       } catch (e) {
-        console.error('Error deleting from Blob Storage:', e);
+        console.error('Error deleting from Firebase Storage:', e);
       }
 
-      // Remove from state regardless of Blob Storage result
+      // Remove from state regardless of Firebase Storage result
       setGalleryItems(prev => prev.filter(item => item.id !== itemToDelete.id));
 
       // Also remove from local storage

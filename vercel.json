@@ -1,6 +1,5 @@
 {
   "rewrites": [
-    { "source": "/api/blob", "destination": "/api/blob.js" },
     { "source": "/api/(.*)", "destination": "/server/server.js" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
